@@ -3,24 +3,54 @@ package util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 import models.User;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
 public class DataManager {
     private static final String USER_DIR = "data/";
     private static final String PASSWORD_FILE = USER_DIR + "users.json";
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    // Add custom serializer/deserializer for LocalDate
+    private static final Gson gson = new GsonBuilder()
+        .setPrettyPrinting()
+        .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+        .create();
 
     private static Map<String, String> userPasswords = loadPasswordMap();
 
     static {
         File dir = new File(USER_DIR);
         if (!dir.exists()) dir.mkdirs();
+    }
+
+    // Custom adapter for LocalDate serialization/deserialization
+    private static class LocalDateAdapter implements JsonSerializer<LocalDate>, JsonDeserializer<LocalDate> {
+        private final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+
+        @Override
+        public JsonElement serialize(LocalDate src, Type typeOfSrc, JsonSerializationContext context) {
+            return src == null ? null : new JsonPrimitive(formatter.format(src));
+        }
+
+        @Override
+        public LocalDate deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            return json == null || json.isJsonNull() ? null : LocalDate.parse(json.getAsString(), formatter);
+        }
     }
 
     public static User loadUser(String username) {
