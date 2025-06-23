@@ -1,11 +1,14 @@
 package models;
 
+import java.time.LocalDate;
+
 public class Task {
     private String description;
     private int xpReward;
     private int coinReward;
     private Difficulty difficulty;
     private boolean completed;
+    private LocalDate completionDate;
 
     public enum Difficulty {
         EASY, MEDIUM, HARD
@@ -18,6 +21,7 @@ public class Task {
         this.coinReward = 0;
         this.difficulty = Difficulty.EASY;
         this.completed = false;
+        this.completionDate = null;
     }
 
     public Task(String description, int xp, int coins, Difficulty difficulty) {
@@ -26,6 +30,7 @@ public class Task {
         this.coinReward = coins;
         this.difficulty = (difficulty != null) ? difficulty : Difficulty.EASY;
         this.completed = false;
+        this.completionDate = null;
     }
 
     public String getDescription() {
@@ -50,11 +55,24 @@ public class Task {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+
+        // Only set completion date if it's being marked as completed and doesn't already have a date
+        if (completed && this.completionDate == null) {
+            this.completionDate = LocalDate.now();
+        }
+    }
+
+    public LocalDate getCompletionDate() {
+        return completionDate;
+    }
+
+    public void setCompletionDate(LocalDate completionDate) {
+        this.completionDate = completionDate;
     }
 
     @Override
     public String toString() {
-        return (completed ? "[✓] " : "[ ] ") + description +
-                " (XP: " + xpReward + ", Coins: " + coinReward + ", Difficulty: " + getDifficulty()+")";
+        String status = completed ? "✓" : "○";
+        return status + " " + description + " [" + difficulty + "] ⭐" + xpReward + " 💰" + coinReward;
     }
 }
